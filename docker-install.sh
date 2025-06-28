@@ -38,7 +38,7 @@ docker info -f '{{ .DockerRootDir}}'
 docker volume create portainer_data
 
 # Create container with Portainera
-docker run -d -p 8001:8000 -p 5001:9443 --name portainer --restart=always \
+docker run -d -p 8001:8000 -p 5000:9443 --name portainer --restart=always \
   -v /var/run/docker.sock:/var/run/docker.sock \
   -v portainer_data:/data portainer/portainer-ce:lts
 
