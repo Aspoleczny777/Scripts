@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Usunięcie potencjalnych istniejących instancji Dockera
+# Removes existing docker instalations
 dnf remove -y docker \
                 docker-client \
                 docker-client-latest \
@@ -12,35 +12,35 @@ dnf remove -y docker \
                 docker-engine-selinux \
                 docker-engine
 
-# Instalacja Dockera
+# Installs docker
 dnf -y install dnf-plugins-core
 dnf config-manager addrepo --from-repofile=https://download.docker.com/linux/fedora/docker-ce.repo
 dnf install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
 
-# Tworzenie katalogu dla Dockera
+# Makes home directory
 mkdir -p /Docker
 
-# Konfiguracja zmiany miejsca instalacji
+# Maps home directory
 cat > /etc/docker/daemon.json <<EOL
 {
   "data-root": "/Docker"
 }
 EOL
 
-# Uruchomienie Dockera
+# Docker start
 systemctl enable --now docker
 systemctl start docker
 
-# Wyświetlenie katalogu domowego Dockera
+# Check home dir
 docker info -f '{{ .DockerRootDir}}'
 
-# Tworzenie volume dla Portainera
+# Create portainer dir 
 docker volume create portainer_data
 
-# Uruchomienie kontenera Portainera
+# Create container with Portainera
 docker run -d -p 8001:8000 -p 5001:9443 --name portainer --restart=always \
   -v /var/run/docker.sock:/var/run/docker.sock \
   -v portainer_data:/data portainer/portainer-ce:lts
 
-# Sprawdzenie działania kontenerów
+# Final check
 docker container list
