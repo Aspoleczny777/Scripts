@@ -1,7 +1,9 @@
 #!/bin/bash
 set -e
 
-# Update system
+# ==========================
+# System Update & Essentials
+# ==========================
 dnf upgrade -y
 
 # Install essentials
@@ -15,17 +17,24 @@ dnf install -y \
     curl
 
 # ==========================
-# dnf5-automatic.timer setup
+# DNF5 Automatic Updates
 # ==========================
-
-# Enable services
+# Enable the timer
 systemctl enable --now dnf5-automatic.timer
 
-# Configure automatic updates to apply all updates
-sed -i 's/^upgrade_type.*/upgrade_type = default/' /etc/dnf/automatic.conf
-sed -i 's/^apply_updates.*/apply_updates = yes/' /etc/dnf/automatic.conf
+# Create DNF5 automatic configuration
+mkdir -p /etc/dnf/automatic.conf.d
+cat <<EOF >/etc/dnf/automatic.conf.d/00-updates.conf
+[commands]
+upgrade_type = default
+apply_updates = yes
 
-# Override the timer to run daily at 1:00 AM
+[emitters]
+system_name = $(hostname)
+emit_via = stdio
+EOF
+
+# Override timer to run daily at 1:00 AM
 mkdir -p /etc/systemd/system/dnf5-automatic.timer.d
 cat <<EOF >/etc/systemd/system/dnf5-automatic.timer.d/override.conf
 [Timer]
@@ -37,13 +46,12 @@ EOF
 systemctl daemon-reload
 systemctl restart dnf5-automatic.timer
 
-#Verification
-systemctl list-timers --all | grep dnf5-automatic
+# Verification
+systemctl list-timers dnf5-automatic.timer
 
 # ==========================
-# SSH setup
+# SSH Setup
 # ==========================
-
 # Configurable variables
 USERNAME="deploy"                    # Non-root user
 USER_PASSWORD=""                     # Optional password; leave empty for key-only login
@@ -67,15 +75,15 @@ else
     echo "User $USERNAME already exists, skipping creation."
 fi
 
-# Configure SSH
+# Backup SSH config
 cp /etc/ssh/sshd_config /etc/ssh/sshd_config.bak
 
-# Set SSH port
+# Configure SSH
 sed -i "s/#Port 22/Port $SSH_PORT/" /etc/ssh/sshd_config
-# Disable root login and password authentication
 sed -i 's/#PermitRootLogin yes/PermitRootLogin no/' /etc/ssh/sshd_config
 sed -i 's/#PasswordAuthentication yes/PasswordAuthentication no/' /etc/ssh/sshd_config
 
+# Restart SSH
 systemctl restart sshd
 
 # Generate SSH key pair
@@ -91,8 +99,6 @@ fi
 
 chmod 600 "$SSH_DIR/id_$KEY_TYPE"
 chmod 644 "$SSH_DIR/id_$KEY_TYPE.pub"
-
-# Set correct ownership if directory is outside user home
 chown -R "$USERNAME:$USERNAME" "$SSH_DIR"
 
 # Instructions for client
@@ -103,13 +109,11 @@ echo "Then login using:"
 echo "ssh -i ~/.ssh/id_$KEY_TYPE -p $SSH_PORT $USERNAME@server"
 echo "=============================="
 
-# Adding firewall rule
-if systemctl is-active --quiet firewalld; then
-    firewall-cmd --permanent --add-port=${SSH_PORT}/tcp
-    firewall-cmd --reload
-fi
+# Add firewall rule for SSH
+firewall-cmd --permanent --add-port=${SSH_PORT}/tcp
+firewall-cmd --reload
 
-# Final Check
+# Final SSH restart check
 systemctl restart sshd || { echo "Failed to restart sshd"; exit 1; }
 
 # ==========================
