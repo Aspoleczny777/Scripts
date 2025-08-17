@@ -12,7 +12,7 @@ dnf install -y \
     nano \
     htop \
     wget \
-    curl 
+    curl
 
 # ==========================
 # dnf5-automatic.timer setup
