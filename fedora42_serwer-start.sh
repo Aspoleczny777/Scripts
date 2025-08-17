@@ -7,19 +7,13 @@ set -e
 dnf upgrade -y
 
 # Install essentials
-dnf install -y \
-    dnf5-plugin-automatic \
-    cockpit-navigator \
-    git \
-    nano \
-    htop \
-    wget \
-    curl
+dnf install -y policycoreutils-python-utils cockpit-navigator nano htop wget curl dnf5-plugin-automatic
 
 # ==========================
 # DNF5 Automatic Updates
 # ==========================
-# Enable the timer
+
+# Enable timer
 systemctl enable --now dnf5-automatic.timer
 
 # Create DNF5 automatic configuration
@@ -34,15 +28,9 @@ system_name = $(hostname)
 emit_via = stdio
 EOF
 
-# Override timer to run daily at 1:00 AM
-mkdir -p /etc/systemd/system/dnf5-automatic.timer.d
-cat <<EOF >/etc/systemd/system/dnf5-automatic.timer.d/override.conf
-[Timer]
-OnCalendar=
-OnCalendar=*-*-* 01:00:00
-EOF
-
-# Reload systemd and restart timer
+# Modify timer directly (Cockpit-friendly)
+cp /usr/lib/systemd/system/dnf5-automatic.timer /etc/systemd/system/dnf5-automatic.timer
+sed -i 's|OnCalendar=.*|OnCalendar=*-*-* 01:00:00|' /etc/systemd/system/dnf5-automatic.timer
 systemctl daemon-reload
 systemctl restart dnf5-automatic.timer
 
@@ -52,12 +40,11 @@ systemctl list-timers dnf5-automatic.timer
 # ==========================
 # SSH Setup
 # ==========================
-# Configurable variables
-USERNAME="deploy"                    # Non-root user
-USER_PASSWORD=""                     # Optional password; leave empty for key-only login
-SSH_PORT=5022                        # SSH port
-SSH_DIR="/root/mykeys/deploy_ssh"    # Where to store the SSH key pair
-KEY_TYPE="ed25519"                   # Key type (ed25519 recommended)
+USERNAME="deploy"
+USER_PASSWORD=""
+SSH_PORT=5022
+SSH_DIR="/root/mykeys/deploy_ssh"
+KEY_TYPE="ed25519"
 
 # Create non-root user if not exists
 if ! id "$USERNAME" &>/dev/null; then
@@ -66,7 +53,7 @@ if ! id "$USERNAME" &>/dev/null; then
         echo "$USERNAME:$USER_PASSWORD" | chpasswd
         echo "Password set for user $USERNAME."
     else
-        passwd -d "$USERNAME"  # Remove password for key-only login
+        passwd -d "$USERNAME"
         echo "Password login disabled for user $USERNAME."
     fi
     usermod -aG wheel "$USERNAME"
@@ -83,8 +70,11 @@ sed -i "s/#Port 22/Port $SSH_PORT/" /etc/ssh/sshd_config
 sed -i 's/#PermitRootLogin yes/PermitRootLogin no/' /etc/ssh/sshd_config
 sed -i 's/#PasswordAuthentication yes/PasswordAuthentication no/' /etc/ssh/sshd_config
 
+# SELinux: allow custom SSH port
+semanage port -a -t ssh_port_t -p tcp $SSH_PORT 2>/dev/null || true
+
 # Restart SSH
-systemctl restart sshd
+systemctl restart sshd || { echo "Failed to restart sshd"; exit 1; }
 
 # Generate SSH key pair
 mkdir -p "$SSH_DIR"
@@ -119,4 +109,4 @@ systemctl restart sshd || { echo "Failed to restart sshd"; exit 1; }
 # ==========================
 # Last message
 # ==========================
-echo "Setup complete!"
+echo "Setup complete! DNF automatic updates are scheduled at 01:00 AM."
