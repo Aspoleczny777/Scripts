@@ -5,6 +5,7 @@ set -e
 # System Update & Essentials
 # ==========================
 dnf upgrade -y
+dnf update -y
 
 # Install essentials
 dnf install -y policycoreutils-python-utils cockpit-navigator nano htop wget curl dnf5-plugin-automatic
