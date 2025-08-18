@@ -2,6 +2,23 @@
 set -e
 
 # ==========================
+# Define before use
+# ==========================
+
+# DNF Automatic Updates
+DNF_AUTO_TIME="01:00:00"
+
+# SSH
+USERNAME="deploy"
+USER_PASSWORD=""
+SSH_PORT=5022
+SSH_DIR="/root/mykeys/deploy_ssh"
+KEY_TYPE="ed25519"
+
+# Hostname
+NEW_HOSTNAME="my-server"
+
+# ==========================
 # System Update & Essentials
 # ==========================
 dnf upgrade -y
@@ -9,6 +26,14 @@ dnf update -y
 
 # Install essentials
 dnf install -y policycoreutils-python-utils cockpit-navigator nano htop wget git curl dnf5-plugin-automatic
+
+# ==========================
+# Changes hostname
+# ==========================
+if [ "$(hostname)" != "$NEW_HOSTNAME" ]; then
+    hostnamectl set-hostname "$NEW_HOSTNAME"
+    echo "Hostname changed to $NEW_HOSTNAME"
+fi
 
 # ==========================
 # DNF5 Automatic Updates
@@ -31,7 +56,7 @@ EOF
 
 # Modify timer directly (Cockpit-friendly)
 cp /usr/lib/systemd/system/dnf5-automatic.timer /etc/systemd/system/dnf5-automatic.timer
-sed -i 's|OnCalendar=.*|OnCalendar=*-*-* 01:00:00|' /etc/systemd/system/dnf5-automatic.timer
+sed -i 's|OnCalendar=.*|OnCalendar=*-*-* $DNF_AUTO_TIME|' /etc/systemd/system/dnf5-automatic.timer
 systemctl daemon-reload
 systemctl restart dnf5-automatic.timer
 
@@ -41,11 +66,6 @@ systemctl list-timers dnf5-automatic.timer
 # ==========================
 # SSH Setup
 # ==========================
-USERNAME="deploy"
-USER_PASSWORD=""
-SSH_PORT=5022
-SSH_DIR="/root/mykeys/deploy_ssh"
-KEY_TYPE="ed25519"
 
 # Create non-root user if not exists
 if ! id "$USERNAME" &>/dev/null; then
@@ -92,14 +112,6 @@ chmod 600 "$SSH_DIR/id_$KEY_TYPE"
 chmod 644 "$SSH_DIR/id_$KEY_TYPE.pub"
 chown -R "$USERNAME:$USERNAME" "$SSH_DIR"
 
-# Instructions for client
-echo "=============================="
-echo "Private key is at: $SSH_DIR/id_$KEY_TYPE"
-echo "Copy this private key to your client machine (e.g., ~/.ssh/id_$KEY_TYPE)"
-echo "Then login using:"
-echo "ssh -i ~/.ssh/id_$KEY_TYPE -p $SSH_PORT $USERNAME@server"
-echo "=============================="
-
 # Add firewall rule for SSH
 firewall-cmd --permanent --add-port=${SSH_PORT}/tcp
 firewall-cmd --reload
@@ -108,6 +120,15 @@ firewall-cmd --reload
 systemctl restart sshd || { echo "Failed to restart sshd"; exit 1; }
 
 # ==========================
-# Last message
+# Last messages
 # ==========================
-echo "Setup complete! DNF automatic updates are scheduled at 01:00 AM."
+
+# Instructions for client
+echo "=============================="
+echo "Private key is at: $SSH_DIR/id_$KEY_TYPE"
+echo "Copy this private key to your client machine (e.g., ~/.ssh/id_$KEY_TYPE)"
+echo "Then login using:"
+echo "ssh -i ~/.ssh/id_$KEY_TYPE -p $SSH_PORT $USERNAME@server"
+echo "=============================="
+
+echo "Setup complete! DNF automatic updates are scheduled at $DNF_AUTO_TIME"
