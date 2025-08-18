@@ -6,7 +6,9 @@ set -e
 # ==========================
 
 # DNF Automatic Updates
-DNF_AUTO_TIME="01:00:00"
+DNF_AUTO_HOUR=01
+DNF_AUTO_MIN=00
+DNF_AUTO_SEC=00
 
 # SSH
 USERNAME="deploy"
@@ -54,16 +56,15 @@ system_name = $(hostname)
 emit_via = stdio
 EOF
 
-# Modify timer directly (Cockpit-friendly)
 mkdir -p /etc/systemd/system/dnf5-automatic.timer.d
 cat <<EOF >/etc/systemd/system/dnf5-automatic.timer.d/override.conf
 [Timer]
-OnCalendar=*-*-* $DNF_AUTO_TIME
+OnCalendar=*-*-* ${DNF_AUTO_HOUR}:${DNF_AUTO_MIN}:${DNF_AUTO_SEC}
 EOF
 
+# Reload systemd and enable/restart timer
 systemctl daemon-reload
-systemctl restart dnf5-automatic.timer
-systemctl enable dnf5-automatic.timer
+systemctl enable --now dnf5-automatic.timer
 systemctl status dnf5-automatic.timer
 
 # Verification
