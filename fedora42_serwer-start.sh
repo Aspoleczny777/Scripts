@@ -5,10 +5,8 @@ set -e
 # Define before use
 # ==========================
 
-# DNF Automatic Updates
-DNF_AUTO_HOUR=01
-DNF_AUTO_MIN=00
-DNF_AUTO_SEC=00
+# Hostname
+NEW_HOSTNAME="my-server"
 
 # SSH
 USERNAME="deploy"
@@ -16,9 +14,6 @@ USER_PASSWORD=""
 SSH_PORT=5022
 SSH_DIR="/root/mykeys/deploy_ssh"
 KEY_TYPE="ed25519"
-
-# Hostname
-NEW_HOSTNAME="my-server"
 
 # ==========================
 # System Update & Essentials
@@ -59,7 +54,7 @@ EOF
 mkdir -p /etc/systemd/system/dnf5-automatic.timer.d
 cat <<EOF >/etc/systemd/system/dnf5-automatic.timer.d/override.conf
 [Timer]
-OnCalendar=*-*-* ${DNF_AUTO_HOUR}:${DNF_AUTO_MIN}:${DNF_AUTO_SEC}
+OnCalendar=*-*-* 01:00:00
 EOF
 
 # Reload systemd and enable/restart timer
