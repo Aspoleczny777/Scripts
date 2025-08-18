@@ -8,7 +8,7 @@ dnf upgrade -y
 dnf update -y
 
 # Install essentials
-dnf install -y policycoreutils-python-utils cockpit-navigator nano htop wget curl dnf5-plugin-automatic
+dnf install -y policycoreutils-python-utils cockpit-navigator nano htop wget git curl dnf5-plugin-automatic
 
 # ==========================
 # DNF5 Automatic Updates
