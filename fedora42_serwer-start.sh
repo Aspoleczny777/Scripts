@@ -51,16 +51,11 @@ system_name = $(hostname)
 emit_via = stdio
 EOF
 
-mkdir -p /etc/systemd/system/dnf5-automatic.timer.d
-cat <<EOF >/etc/systemd/system/dnf5-automatic.timer.d/override.conf
-[Timer]
-OnCalendar=*-*-* 01:00:00
-EOF
-
-# Reload systemd and enable/restart timer
+# Modify timer directly (Cockpit-friendly)
+cp /usr/lib/systemd/system/dnf5-automatic.timer /etc/systemd/system/dnf5-automatic.timer
+sed -i 's|OnCalendar=.*|OnCalendar=*-*-* 01:00:00|' /etc/systemd/system/dnf5-automatic.timer
 systemctl daemon-reload
-systemctl enable --now dnf5-automatic.timer
-systemctl status dnf5-automatic.timer
+systemctl restart dnf5-automatic.timer
 
 # Verification
 systemctl list-timers dnf5-automatic.timer
