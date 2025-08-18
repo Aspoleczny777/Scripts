@@ -56,7 +56,7 @@ EOF
 
 # Modify timer directly (Cockpit-friendly)
 cp /usr/lib/systemd/system/dnf5-automatic.timer /etc/systemd/system/dnf5-automatic.timer
-sed -i 's|OnCalendar=.*|OnCalendar=*-*-* $DNF_AUTO_TIME|' /etc/systemd/system/dnf5-automatic.timer
+sed -i "s|OnCalendar=.*|OnCalendar=*-*-* $DNF_AUTO_TIME|" /etc/systemd/system/dnf5-automatic.timer
 systemctl daemon-reload
 systemctl restart dnf5-automatic.timer
 
