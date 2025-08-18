@@ -55,10 +55,16 @@ emit_via = stdio
 EOF
 
 # Modify timer directly (Cockpit-friendly)
-cp /usr/lib/systemd/system/dnf5-automatic.timer /etc/systemd/system/dnf5-automatic.timer
-sed -i "s|OnCalendar=.*|OnCalendar=*-*-* $DNF_AUTO_TIME|" /etc/systemd/system/dnf5-automatic.timer
+mkdir -p /etc/systemd/system/dnf5-automatic.timer.d
+cat <<EOF >/etc/systemd/system/dnf5-automatic.timer.d/override.conf
+[Timer]
+OnCalendar=*-*-* $DNF_AUTO_TIME
+EOF
+
 systemctl daemon-reload
 systemctl restart dnf5-automatic.timer
+systemctl enable dnf5-automatic.timer
+systemctl status dnf5-automatic.timer
 
 # Verification
 systemctl list-timers dnf5-automatic.timer
