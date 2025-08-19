@@ -1,3 +1,4 @@
+
 #!/bin/bash
 set -e
 
@@ -8,11 +9,15 @@ set -e
 # Hostname
 NEW_HOSTNAME="my-server"
 
+# Updates hour and minut
+UP_HOUR="01"
+UP_MIN="00"
+
 # SSH
 USERNAME="deploy"
 USER_PASSWORD=""
 SSH_PORT=5022
-SSH_DIR="/root/mykeys/deploy_ssh"
+SSH_DIR="/home/$USERNAME/.ssh"
 KEY_TYPE="ed25519"
 
 # ==========================
@@ -53,7 +58,7 @@ EOF
 
 # Modify timer directly (Cockpit-friendly)
 cp /usr/lib/systemd/system/dnf5-automatic.timer /etc/systemd/system/dnf5-automatic.timer
-sed -i 's|OnCalendar=.*|OnCalendar=*-*-* 01:00:00|' /etc/systemd/system/dnf5-automatic.timer
+sed -i 's|OnCalendar=.*|OnCalendar=*-*-* $UP_HOUR:$UP_MIN:00|' /etc/systemd/system/dnf5-automatic.timer
 systemctl daemon-reload
 systemctl restart dnf5-automatic.timer
 
@@ -128,4 +133,4 @@ echo "Then login using:"
 echo "ssh -i ~/.ssh/id_$KEY_TYPE -p $SSH_PORT $USERNAME@server"
 echo "=============================="
 
-echo "Setup complete! DNF automatic updates are scheduled at $DNF_AUTO_TIME"
+echo "Setup complete! DNF automatic updates are scheduled at $UP_HOUR:$UP_MIN"
