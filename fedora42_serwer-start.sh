@@ -1,4 +1,3 @@
-
 #!/bin/bash
 set -e
 
@@ -114,6 +113,14 @@ chmod 600 "$SSH_DIR/id_$KEY_TYPE"
 chmod 644 "$SSH_DIR/id_$KEY_TYPE.pub"
 chown -R "$USERNAME:$USERNAME" "$SSH_DIR"
 
+# Create authorized_keys and add public key
+AUTHORIZED_KEYS="$SSH_DIR/authorized_keys"
+
+touch "$AUTHORIZED_KEYS"
+chmod 600 "$AUTHORIZED_KEYS"
+cat "$SSH_DIR/id_$KEY_TYPE.pub" >> "$AUTHORIZED_KEYS"
+chown "$USERNAME:$USERNAME" "$AUTHORIZED_KEYS"
+
 # Add firewall rule for SSH
 firewall-cmd --permanent --add-port=${SSH_PORT}/tcp
 firewall-cmd --reload
@@ -126,11 +133,18 @@ systemctl restart sshd || { echo "Failed to restart sshd"; exit 1; }
 # ==========================
 
 # Instructions for client
+echo "******************************************************************"
+echo "Setup complete!"
+
+echo "System name changed to $NEW_HOSTNAME"
+
+echo "DNF automatic updates are scheduled at $UP_HOUR:$UP_MIN"
+
 echo "=============================="
+echo "Public key added to authorized_keys for $USERNAME."
 echo "Private key is at: $SSH_DIR/id_$KEY_TYPE"
 echo "Copy this private key to your client machine (e.g., ~/.ssh/id_$KEY_TYPE)"
 echo "Then login using:"
 echo "ssh -i ~/.ssh/id_$KEY_TYPE -p $SSH_PORT $USERNAME@server"
 echo "=============================="
 
-echo "Setup complete! DNF automatic updates are scheduled at $UP_HOUR:$UP_MIN"
