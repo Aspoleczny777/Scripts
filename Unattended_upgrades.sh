@@ -32,13 +32,14 @@ cp /etc/apt/apt.conf.d/50unattended-upgrades /etc/apt/apt.conf.d/99unattended-up
 # Editing 99unattended-upgrades
 # Use sed to uncomment and update necessary values
 sed -i \
-    -e 's#//\(Unattended-Upgrade::AutoFixInterruptedDpkg\).*#\1 "true";#' \
-    -e "s#//\(Unattended-Upgrade::Mail\).*#\1 \"$EMAIL\";#" \
-    -e 's#//\(Unattended-Upgrade::MailReport\).*#\1 "only-on-error";#' \
-    -e 's#//\(Unattended-Upgrade::Remove-Unused-Dependencies\).*#\1 "true";#' \
-    -e 's#//\(Unattended-Upgrade::Automatic-Reboot "\)false\(.*\)#\1true\2#' \
-    -e 's#//\(Unattended-Upgrade::Automatic-Reboot-WithUsers\).*#\1 "true";#' \
-    -e "s#//\(Unattended-Upgrade::Automatic-Reboot-Time\).*#\1 \"$REBOOT_TIME\";#" \
+    -e "s|^//Unattended-Upgrade::AutoFixInterruptedDpkg.*|Unattended-Upgrade::AutoFixInterruptedDpkg \"true\";|" \
+    -e "s|^//Unattended-Upgrade::Mail \".*|Unattended-Upgrade::Mail \"$EMAIL\";|" \
+    -e "s|^//Unattended-Upgrade::MailReport.*|Unattended-Upgrade::MailReport \"only-on-error\";|" \
+    -e "s|^//Unattended-Upgrade::Remove-Unused-Dependencies.*|Unattended-Upgrade::Remove-Unused-Dependencies \"true\";|" \
+    -e "s|^//Unattended-Upgrade::Remove-New-Unused-Dependencies.*|Unattended-Upgrade::Remove-New-Unused-Dependencies \"true\";|" \
+    -e "s|^//Unattended-Upgrade::Automatic-Reboot \".*|Unattended-Upgrade::Automatic-Reboot \"true\";|" \
+    -e "s|^//Unattended-Upgrade::Automatic-Reboot-WithUsers.*|Unattended-Upgrade::Automatic-Reboot-WithUsers \"true\";|" \
+    -e "s|^//Unattended-Upgrade::Automatic-Reboot-Time.*|Unattended-Upgrade::Automatic-Reboot-Time \"$REBOOT_TIME\";|" \
     /etc/apt/apt.conf.d/99unattended-upgrades
 
 # Editing apt-daily-upgrade.timer
