@@ -1,6 +1,10 @@
 #!/bin/bash
 set -e
 
+# !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+# This script is tailored for Fedora Server 42
+# !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
 # ==========================
 # Define before use
 # ==========================
@@ -12,7 +16,7 @@ NEW_HOSTNAME="my-server"
 USERNAME="deploy"
 USER_PASSWORD=""
 SSH_PORT=5022
-SSH_DIR="/root/mykeys/deploy_ssh"
+SSH_DIR="/home/$USERNAME/.ssh"
 KEY_TYPE="ed25519"
 
 # ==========================
