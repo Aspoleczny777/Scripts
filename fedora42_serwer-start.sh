@@ -19,7 +19,6 @@ KEY_TYPE="ed25519"
 # System Update & Essentials
 # ==========================
 dnf upgrade -y
-dnf update -y
 
 # Install essentials
 dnf install -y policycoreutils-python-utils cockpit-navigator nano htop wget git curl dnf5-plugin-automatic
