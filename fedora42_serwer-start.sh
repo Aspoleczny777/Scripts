@@ -131,4 +131,4 @@ echo "Then login using:"
 echo "ssh -i ~/.ssh/id_$KEY_TYPE -p $SSH_PORT $USERNAME@server"
 echo "=============================="
 
-echo "Setup complete! DNF automatic updates are scheduled at $DNF_AUTO_TIME"
+echo "Setup complete! DNF automatic updates are scheduled"
