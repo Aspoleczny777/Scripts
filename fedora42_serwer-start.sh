@@ -112,6 +112,25 @@ chmod 600 "$SSH_DIR/id_$KEY_TYPE"
 chmod 644 "$SSH_DIR/id_$KEY_TYPE.pub"
 chown -R "$USERNAME:$USERNAME" "$SSH_DIR"
 
+# Defining variables
+PUB_KEY_FILE="$SSH_DIR/id_$KEY_TYPE.pub"
+AUTH_KEYS_FILE="$SSH_DIR/authorized_keys"
+
+# Create auth file
+touch "$AUTH_KEYS_FILE"
+chmod 600 "$AUTH_KEYS_FILE"
+
+# Copy public key to file
+if ! grep -q -f "$PUB_KEY_FILE" "$AUTH_KEYS_FILE"; then
+    cat "$PUB_KEY_FILE" >> "$AUTH_KEYS_FILE"
+    echo "Public key added to $AUTH_KEYS_FILE."
+else
+    echo "Public key already present in $AUTH_KEYS_FILE."
+fi
+else
+    echo "SSH key pair already exists at $SSH_DIR, skipping generation."
+fi
+
 # Add firewall rule for SSH
 firewall-cmd --permanent --add-port=${SSH_PORT}/tcp
 firewall-cmd --reload
