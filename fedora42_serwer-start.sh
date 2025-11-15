@@ -17,7 +17,7 @@ USERNAME="deploy"
 USER_PASSWORD=""
 SSH_PORT=5022
 SSH_DIR="/home/$USERNAME/.ssh"
-KEY_TYPE="ed25519"
+AUTHORIZED_KEYS_URL="https://raw.githubusercontent.com/Aspoleczny777/Pub_keys/main/authorized_keys"
 
 # ==========================
 # System Update & Essentials
@@ -78,7 +78,6 @@ if ! id "$USERNAME" &>/dev/null; then
         echo "Password login disabled for user $USERNAME."
     fi
     usermod -aG wheel "$USERNAME"
-    echo "User $USERNAME created."
 else
     echo "User $USERNAME already exists, skipping creation."
 fi
@@ -94,42 +93,21 @@ sed -i 's/#PasswordAuthentication yes/PasswordAuthentication no/' /etc/ssh/sshd_
 # SELinux: allow custom SSH port
 semanage port -a -t ssh_port_t -p tcp $SSH_PORT 2>/dev/null || true
 
-# Restart SSH
-systemctl restart sshd || { echo "Failed to restart sshd"; exit 1; }
-
-# Generate SSH key pair
+# Prepare SSH directory
 mkdir -p "$SSH_DIR"
 chmod 700 "$SSH_DIR"
-
-if [ ! -f "$SSH_DIR/id_$KEY_TYPE" ]; then
-    ssh-keygen -t "$KEY_TYPE" -f "$SSH_DIR/id_$KEY_TYPE" -N "" -C "$USERNAME@server"
-    echo "SSH key pair generated at $SSH_DIR."
-else
-    echo "SSH key pair already exists at $SSH_DIR, skipping generation."
-fi
-
-chmod 600 "$SSH_DIR/id_$KEY_TYPE"
-chmod 644 "$SSH_DIR/id_$KEY_TYPE.pub"
 chown -R "$USERNAME:$USERNAME" "$SSH_DIR"
 
-# Defining variables
-PUB_KEY_FILE="$SSH_DIR/id_$KEY_TYPE.pub"
-AUTH_KEYS_FILE="$SSH_DIR/authorized_keys"
+# Download authorized_keys from your GitHub repo
+curl -fsSL "$AUTHORIZED_KEYS_URL" -o "$SSH_DIR/authorized_keys"
 
-# Create auth file
-touch "$AUTH_KEYS_FILE"
-chmod 600 "$AUTH_KEYS_FILE"
+chmod 600 "$SSH_DIR/authorized_keys"
+chown "$USERNAME:$USERNAME" "$SSH_DIR/authorized_keys"
 
-# Copy public key to file
-if ! grep -q -f "$PUB_KEY_FILE" "$AUTH_KEYS_FILE"; then
-    cat "$PUB_KEY_FILE" >> "$AUTH_KEYS_FILE"
-    echo "Public key added to $AUTH_KEYS_FILE."
-else
-    echo "Public key already present in $AUTH_KEYS_FILE."
-fi
-else
-    echo "SSH key pair already exists at $SSH_DIR, skipping generation."
-fi
+echo "Downloaded authorized_keys from GitHub."
+
+# Restart SSH
+systemctl restart sshd || { echo "Failed to restart sshd"; exit 1; }
 
 # Add firewall rule for SSH
 firewall-cmd --permanent --add-port=${SSH_PORT}/tcp
@@ -142,12 +120,11 @@ systemctl restart sshd || { echo "Failed to restart sshd"; exit 1; }
 # Last messages
 # ==========================
 
-# Instructions for client
 echo "=============================="
-echo "Private key is at: $SSH_DIR/id_$KEY_TYPE"
-echo "Copy this private key to your client machine (e.g., ~/.ssh/id_$KEY_TYPE)"
-echo "Then login using:"
-echo "ssh -i ~/.ssh/id_$KEY_TYPE -p $SSH_PORT $USERNAME@server"
+echo "Authorized keys installed from GitHub."
+echo "SSH now listens on port $SSH_PORT."
+echo "Login using:"
+echo "ssh -p $SSH_PORT $USERNAME@server"
 echo "=============================="
 
-echo "Setup complete! DNF automatic updates are scheduled"
+echo "Setup complete! DNF automatic updates are scheduled."
