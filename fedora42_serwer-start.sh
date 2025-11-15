@@ -2,7 +2,7 @@
 set -e
 
 # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-# This script is tailored for Fedora Server 42
+# This script is tailored for Fedora Server 43
 # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 # ==========================
@@ -25,7 +25,16 @@ AUTHORIZED_KEYS_URL="https://raw.githubusercontent.com/Aspoleczny777/Pub_keys/ma
 dnf upgrade -y
 
 # Install essentials
-dnf install -y policycoreutils-python-utils cockpit-navigator nano htop wget git curl dnf5-plugin-automatic
+dnf install -y \
+    policycoreutils-python-utils \
+    cockpit \
+    nano \
+    htop \
+    wget \
+    git \
+    curl \
+    dnf5-plugin-automatic \
+    || true
 
 # ==========================
 # Changes hostname
