@@ -96,7 +96,7 @@ cp /etc/ssh/sshd_config /etc/ssh/sshd_config.bak
 
 # Configure SSH
 sed -i "s/#Port 22/Port $SSH_PORT/" /etc/ssh/sshd_config
-sed -i 's/#PermitRootLogin yes/PermitRootLogin no/' /etc/ssh/sshd_config
+sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin no/' /etc/ssh/sshd_config
 sed -i 's/#PasswordAuthentication yes/PasswordAuthentication no/' /etc/ssh/sshd_config
 
 # SELinux: allow custom SSH port
